@@ -2,7 +2,7 @@
 /***************** jQuery ******************/
 /*******************************************/
 
-//Design pattern allows more abstraction
+//Module Design pattern allows copying properties and functions into $ and having an isolated module
 var $ = (function(selector){
 	var obj = {};
 	
@@ -10,6 +10,8 @@ var $ = (function(selector){
 	obj.collection = [];		//jQuery collection
 	obj.isKhtml = (navigator && navigator.userAgent && navigator.userAgent.indexOf("KHTML") !== -1);
     obj.isIE = (navigator && navigator.userAgent && navigator.userAgent.indexOf("MSIE") !== -1);
+	obj.author = "Harry Shah";
+	obj.version = "1.0.0";
 	
 	/***	Define functions	***/
 	//Following should be called as a constructor
@@ -47,25 +49,29 @@ var $ = (function(selector){
 /**************** Angular ******************/
 /*******************************************/
 
+//Object initialization
+if (typeof angular === 'undefined') {
+	//Create angular object if not exists
+	var angular = {};
+}
+
+//Design pattern allows explicitly copying properties and functions into angular
 (function(){
 	//Null check
-    if (typeof angular === 'undefined') {
-		//Create angular object if not exists
-		var angular = {};
-	}
     
 	/***	Define properties	***/
 	angular.isKhtml = (navigator && navigator.userAgent && navigator.userAgent.indexOf("KHTML") !== -1);
     angular.isIE = (navigator && navigator.userAgent && navigator.userAgent.indexOf("MSIE") !== -1);
+	angular.author = "Harry Shah";
+	angular.version = "1.0.0";
 	
 	/***	Define functions	***/
 	//jQuery mini functionality
-	angular.element = $;
+	angular.element = $.getDOM;
 
     angular.mo2 = function (target, ev){
         ev = ev || window.event;
 		
 		return {};
 	};
-	
 })();
