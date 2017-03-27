@@ -4,10 +4,12 @@
 
 //Module Design pattern allows copying properties and functions into $ and having an isolated module
 var $ = (function(selector){
-	/***	Define properties	***/
-	var jQuery = {};
-	jQuery.author = "Harry Shah";
-	jQuery.version = "1.0.0";
+	/***	Define objects	***/
+	var jQuery = 	{ 	
+						"fn": {},			//fn object for all jQuery functions
+						"author": "Harry Shah",
+						"version": "1.0.0"
+					};
 	
 	/***	Define functions	***/
 	/*	
@@ -18,7 +20,12 @@ var $ = (function(selector){
 				$(selector).getDOM(),
 				$.getDom() ??
 	*/
-	jQuery.getDOM = function(selector) {
+	jQuery.fn.getDOM = function(selector) {
+		//Handle case when no selector passed
+		if(!selector){
+			//return 
+		}
+		
 		this.collection = [];					//JS collection of DOM nodes
 		this.selector = selector;
 		
@@ -41,9 +48,15 @@ var $ = (function(selector){
 		
 		this.length = this.collection.length;
 		
-		//This should not return other functions - get, each
-		return this;
+		//return this;
 	};
+	
+	/*
+		$						- Return getDom function
+		$()						- Returns object from getDom() function
+		$(selector).each()		- each() accessible from constructor object
+		$.each()				- each() accessible from $ object
+	/*
 	
 	/*	
 		Description: Return collection (zero-indexed) as plain JavaScript array
@@ -53,7 +66,7 @@ var $ = (function(selector){
 		usage: 	$(".header").get(),
 				$("h2").get(0)
 	*/
-	jQuery.get = function(index){
+	jQuery.fn.get = function(index){
 		return (!isNaN(index) && typeof(index)=="number") ? this.collection[index] : this.collection;
 	};
 	
@@ -68,7 +81,7 @@ var $ = (function(selector){
 				$.isNumeric( true )
 				$.isNumeric( null )
 	*/
-	jQuery.isNumeric = function(value){
+	jQuery.fn.isNumeric = function(value){
 		console.log(value);
 		//Return boolean
 	};
@@ -81,8 +94,8 @@ var $ = (function(selector){
 		usage: 	$.each(['AA','BB','CC'], function(){ }),
 				$.each({'A':'Harry', 'B':'Sam', 'C':'Kyler'}, function(key, value){  })
 	*/
-	jQuery.each = function(object, callback){
-		console.log(key + " | " + value);
+	jQuery.fn.each = function(object, callback){
+		console.log(object + " | " + callback);
 		//Return iterator
 	};
 	
@@ -91,7 +104,7 @@ var $ = (function(selector){
 		return: boolean
 		usage: 	$.isKhtml()
 	*/
-	jQuery.isKhtml = function(){
+	jQuery.fn.isKhtml = function(){
 		return (navigator && navigator.userAgent && navigator.userAgent.indexOf("KHTML") !== -1);
 	};
 	
@@ -100,23 +113,23 @@ var $ = (function(selector){
 		return: boolean
 		usage: 	$.isIE()
 	*/
-	jQuery.isIE = function(){
+	jQuery.fn.isIE = function(){
 		return (navigator && navigator.userAgent && navigator.userAgent.indexOf("MSIE") !== -1);
 	};
 	
-	//If selector passed, call constructor to return jQuery object
-	if(selector)
-		return new jQuery.getDOM(selector);
-	//Use the module design pattern (return {'property1':methodName}) for public/private abstraction
-	else
-		return jQuery;
-		/*
-		return 	{
-					"isNumeric": jQuery.isNumeric,
-					"each": jQuery.each
-				};
-		*/
+	//Design Pattern: Prototype
+	//When a property is sought and it isn't found in the object itself, then it is taken from the object's constructor's prototype.
+	//The prototype mechanism is used for inheritance. It also conserves memory.
+	//Another option was Module design pattern for public-private abstraction. Refer http://bit.ly/2nRGkik
+	//Example: return {'find':findMethod} where $.find('each') method will take the required function as an argument
+	//this.prototype.constructor.prototype = jQuery.fn;
+	jQuery.fn.getDOM.prototype = jQuery.fn;
+	
+	//Call constructor to return jQuery object
+	return new jQuery.fn.getDOM(selector);
 });
+
+
 
 /*******************************************/
 /**************** Angular ******************/
