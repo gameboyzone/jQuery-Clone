@@ -4,27 +4,24 @@
 
 //Module Design pattern allows copying properties and functions into $ and having an isolated module
 var $ = (function(selector){
-	var obj = {};
-	
 	/***	Define properties	***/
-	obj.collection = [];		//jQuery collection
-	obj.isKhtml = (navigator && navigator.userAgent && navigator.userAgent.indexOf("KHTML") !== -1);
-    obj.isIE = (navigator && navigator.userAgent && navigator.userAgent.indexOf("MSIE") !== -1);
-	obj.author = "Harry Shah";
-	obj.version = "1.0.0";
-	obj.selector = selector;
+	var jQuery = {};
+	jQuery.author = "Harry Shah";
+	jQuery.version = "1.0.0";
 	
 	/***	Define functions	***/
 	/*	
-		Description: Following should be called (as constructor) when returning the jQuery object
+		Description: Return jQuery object based on selector passed
 		param: 	selector (string)/DOM node (object)
-		return: object (if index passed),
-				array (if no index passed)
+		return: object
 		usage: 	$(selector),
 				$(selector).getDOM(),
 				$.getDom() ??
 	*/
-	obj.getDOM = function(selector) {
+	jQuery.getDOM = function(selector) {
+		this.collection = [];					//JS collection of DOM nodes
+		this.selector = selector;
+		
 		//Selector is ID
 		if(typeof(selector)=='string' && selector.charAt(0)=='#'){	//selector.indexOf("#")!=-1
 			this.collection = [document.getElementById(selector.substring(1, selector.length))];
@@ -42,6 +39,8 @@ var $ = (function(selector){
 			this.collection = [selector];
 		}
 		
+		this.length = this.collection.length;
+		
 		//This should not return other functions - get, each
 		return this;
 	};
@@ -54,7 +53,7 @@ var $ = (function(selector){
 		usage: 	$(".header").get(),
 				$("h2").get(0)
 	*/
-	obj.get = function(index){
+	jQuery.get = function(index){
 		return (!isNaN(index) && typeof(index)=="number") ? this.collection[index] : this.collection;
 	};
 	
@@ -69,7 +68,7 @@ var $ = (function(selector){
 				$.isNumeric( true )
 				$.isNumeric( null )
 	*/
-	obj.isNumeric = function(value){
+	jQuery.isNumeric = function(value){
 		console.log(value);
 		//Return boolean
 	};
@@ -82,22 +81,41 @@ var $ = (function(selector){
 		usage: 	$.each(['AA','BB','CC'], function(){ }),
 				$.each({'A':'Harry', 'B':'Sam', 'C':'Kyler'}, function(key, value){  })
 	*/
-	obj.each = function(object, callback){
+	jQuery.each = function(object, callback){
 		console.log(key + " | " + value);
 		//Return iterator
 	};
 	
-	//Call the object function to always return jQuery object
-	//IMPORTANT: Can we call a constructor here so getDOM() and all other functions stay private?
-	//IMPORTANT: Or can we use the module design pattern (return {'property1':methodName}) for public/private abstraction
+	/*	
+		Description: Determine if browser is KHTML compliant
+		return: boolean
+		usage: 	$.isKhtml()
+	*/
+	jQuery.isKhtml = function(){
+		return (navigator && navigator.userAgent && navigator.userAgent.indexOf("KHTML") !== -1);
+	};
+	
+	/*	
+		Description: Determine if browser is Internet Explorer
+		return: boolean
+		usage: 	$.isIE()
+	*/
+	jQuery.isIE = function(){
+		return (navigator && navigator.userAgent && navigator.userAgent.indexOf("MSIE") !== -1);
+	};
+	
+	//If selector passed, call constructor to return jQuery object
 	if(selector)
-		return obj.getDOM(selector);
-		//return new obj.getDOM(selector);
+		return new jQuery.getDOM(selector);
+	//Use the module design pattern (return {'property1':methodName}) for public/private abstraction
 	else
+		return jQuery;
+		/*
 		return 	{
-					"isNumeric": obj.isNumeric,
-					"each": obj.each
+					"isNumeric": jQuery.isNumeric,
+					"each": jQuery.each
 				};
+		*/
 });
 
 /*******************************************/
