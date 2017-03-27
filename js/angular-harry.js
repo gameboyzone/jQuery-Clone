@@ -31,7 +31,7 @@ var $ = (function(selector){
 	};
 	
 	obj.get = function(index){
-		return (typeof index == "number") ? this.collection[index] : this.collection;
+		return (!isNaN(index) && typeof(index)=="number") ? this.collection[index] : this.collection;
 	};
 	
 	obj.each = function(key, value){
