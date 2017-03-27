@@ -30,8 +30,13 @@ var $ = (function(selector){
 		return this;
 	};
 	
+	obj.get = function(index){
+		return (typeof index == "number") ? this.collection[index] : this.collection;
+	};
+	
 	obj.each = function(key, value){
 		console.log(key + " | " + value);
+		//Return iterator
 	};
 	
 	//Always return jQuery object
