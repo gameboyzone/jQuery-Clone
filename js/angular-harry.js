@@ -11,31 +11,45 @@
 					Note: 	Module pattern can also be implemented by enclosing only the return statement in the anonymous function.
 							This allows the freedom to modify the $ and jQuery.fn objects outside the scope of the module.
 	usage:	$					- Return the anonymous function
-			$()					- Returns object from getDom() function i.e. constructor
+			$()					- Return object from getDom() function i.e. constructor
 			$(selector).each()	- each() accessible from constructor object
 			$.each()			- each() accessible from $ object
 */
 var $ = function(selector){
-	/***	Define objects	***/
+	/***	Define objects and self-invoking ***/
 	var jQuery = 	{	
-						"fn": {},			//fn property will contain all jQuery functions
-						"author": "Harry Shah",
-						"version": "1.0.0"
+						"fn": 		{},				//Will contain all jQuery functions
+						"readyCallbacks": [],		//Function Callbacks to be executed on $(document).ready();
+						"isReady": 	false,
+						"author": 	"Harry Shah",
+						"version": 	"1.0.0"
 					};
+	
+	//Event handler for onload (check onload vs DOMContentLoaded), execute callbacks in readyCallbacks[]
+	document.addEventListener("DOMContentLoaded", function() {
+		//Execute the callbacks
+		for(var i=0; i<jQuery.readyCallbacks.length; i++){
+			jQuery.readyCallbacks[i].call(document);		//Should second argument - $ be provided?
+		}
+	});
 	
 	/***	Define functions	***/
 	/*	
 		Description: Return jQuery object based on selector passed
 		param: 	selector (string)/DOM node (object)
 		return: object
-		usage: 	$(selector),
+		usage: 	$("div") - selector can be div, #container, .header,
+				$(document.getElementById("container")),
 				$(selector).getDOM(),
-				$.getDom()
+				$.getDOM()
 	*/
-	jQuery.fn.getDOM = function(selector) {
+	jQuery.fn.getDOM = function(selector){
 		//Handle case when no selector passed
-		if(!selector){
-			//Do nothing
+		if(!selector){ /* Do nothing */ }
+		
+		//Handle case when selector is callback function
+		if(this.isFunction(selector)){
+			this.ready(selector);
 		}
 		
 		this.collection = [];		//JS collection of DOM nodes
@@ -65,6 +79,20 @@ var $ = function(selector){
 	};
 	
 	/*	
+		Description: Detemine if the object is a Function. Note: Only solution which works across all browsers
+		param: 	object
+		return: boolean
+		usage: 	$.isFunction(function(){})
+	*/
+	jQuery.fn.isFunction = function(object){
+		//Check invalid cases
+		if(!object)	
+			return false;
+		
+		return Object.prototype.toString.call(object)==='[object Function]';
+	};
+	
+	/*	
 		Description: Converts property-based object to plain JavaScript array
 		param: 	object
 		return: array
@@ -74,6 +102,8 @@ var $ = function(selector){
 		//Check invalid cases
 		if(!object || typeof object !=='object')
 			return null;
+		//If already an array, return the object as it is
+			
 		
 		var arr = [];
 		
@@ -135,8 +165,11 @@ var $ = function(selector){
 				$.isNumeric( null )
 	*/
 	jQuery.fn.isNumeric = function(value){
-		console.log(value);
-		//Return boolean
+		//Check invalid cases
+		if(!value || isNaN(value))
+			return false;
+		
+		return parseFloat(value) && isFinite(value);
 	};
 	
 	/*	
@@ -150,6 +183,26 @@ var $ = function(selector){
 	jQuery.fn.each = function(object, callback){
 		console.log(object + " | " + callback);
 		//Return iterator
+	};
+	
+	/*	
+		Description: Provides the function block to execute when DOM is ready
+		param: 	callback (callback function)
+		return: 
+		usage: 	$(function(){	});
+				$(document).ready(function(){	});
+				$.ready(function(){	});
+				$("img").ready(function(){	});
+	*/
+	jQuery.fn.ready = function(callback){
+		//Case 1 - If jQuery is not ready
+		if(jQuery.isReady){
+			callback.call(document);	//Should second argument - $ be present
+		}
+		else{
+			//Case 2 - If jQuery is not ready
+			jQuery.readyCallbacks.push(callback);
+		}
 	};
 	
 	/*	
