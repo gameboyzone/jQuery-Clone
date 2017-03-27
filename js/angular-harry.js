@@ -167,7 +167,8 @@ var $ = function(selector){
 		usage: 	$.isIE()
 	*/
 	jQuery.fn.isIE = function(){
-		return (navigator && navigator.userAgent && navigator.userAgent.indexOf("MSIE") !== -1);
+		//3 conditions: IE 10 and below, IE 11, IE Edge
+		return (navigator && navigator.userAgent && navigator.userAgent.indexOf("MSIE") !== -1) || (!window.ActiveXObject && "ActiveXObject" in window) || /Edge\/\d./i.test(navigator.userAgent);
 	};
 	
 	/*
