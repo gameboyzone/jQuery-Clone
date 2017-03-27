@@ -16,7 +16,24 @@
 			$.each()			- each() accessible from $ object
 */
 var $ = function(selector){
-	/***	Define objects and self-invoking ***/
+	/*
+		Design Pattern: Prototype
+		1.	When a property is sought and it isn't found in the object itself, then it is taken from the object's constructor's prototype.
+			This prototype mechanism will allow all jQuery instance objects (i.e. $()) access to jQuery.fn objects via inheritance. It also conserves memory.
+			Refer: http://bit.ly/2nEYsjs
+		2. 	Another option was Module design pattern for public-private abstraction. Refer http://bit.ly/2nRGkik
+			Example: return {'find':findMethod} where $.find('each') method will take the required function as an argument
+		3. 	There is no generic __lookupGetter for prototype. There is a Proxy class as a new feature in ES6 but does not work in IE.
+			Refer: https://mzl.la/2nMY277 and https://mzl.la/1ZCMa84
+	*/
+	this.constructor = jQuery.fn.getDOM;
+	this.constructor.prototype = jQuery.fn;
+	
+	//Using 'new' allows defining constructor for the returned jQuery object. Using $() will fire this constructor
+	return new this.constructor(selector);
+};
+
+	/***	Define objects ***/
 	var jQuery = 	{	
 						"fn": 		{},				//Will contain all jQuery functions
 						"readyCallbacks": [],		//Function Callbacks to be executed on $(document).ready();
@@ -24,14 +41,6 @@ var $ = function(selector){
 						"author": 	"Harry Shah",
 						"version": 	"1.0.0"
 					};
-	
-	//Event handler for onload (check onload vs DOMContentLoaded), execute callbacks in readyCallbacks[]
-	document.addEventListener("DOMContentLoaded", function() {
-		//Execute the callbacks
-		for(var i=0; i<jQuery.readyCallbacks.length; i++){
-			jQuery.readyCallbacks[i].call(document);		//Should second argument - $ be provided?
-		}
-	});
 	
 	/***	Define functions	***/
 	/*	
@@ -154,6 +163,15 @@ var $ = function(selector){
 	};
 	
 	/*	
+		Description: Return size of jQuery collection
+		return: number
+		usage: 	$(".header").size()
+	*/
+	jQuery.fn.size = function(){
+		return this.collection.length;
+	};
+	
+	/*	
 		Description: Check if the value passed is a number
 		param: 	string/object/number/boolean
 		return: true/false
@@ -196,10 +214,10 @@ var $ = function(selector){
 	*/
 	jQuery.fn.ready = function(callback){
 		//Case 1 - If jQuery is not ready
-		if(jQuery.isReady){
-			callback.call(document);	//Should second argument - $ be present
+		if($.isReady && jQuery.fn.isFunction(callback)){
+			callback.call(document, $);
 		}
-		else{
+		else if(!jQuery.isReady && jQuery.fn.isFunction(callback)){
 			//Case 2 - If jQuery is not ready
 			jQuery.readyCallbacks.push(callback);
 		}
@@ -224,30 +242,32 @@ var $ = function(selector){
 		return (navigator && navigator.userAgent && navigator.userAgent.indexOf("MSIE") !== -1) || (!window.ActiveXObject && "ActiveXObject" in window) || /Edge\/\d./i.test(navigator.userAgent);
 	};
 	
-	/*
-		Design Pattern: Prototype
-		1.	When a property is sought and it isn't found in the object itself, then it is taken from the object's constructor's prototype.
-			This prototype mechanism will allow all jQuery instance objects (i.e. $()) access to jQuery.fn objects via inheritance. It also conserves memory.
-			Refer: http://bit.ly/2nEYsjs
-		2. 	Another option was Module design pattern for public-private abstraction. Refer http://bit.ly/2nRGkik
-			Example: return {'find':findMethod} where $.find('each') method will take the required function as an argument
-		3. 	There is no generic __lookupGetter for prototype. There is a Proxy class as a new feature in ES6 but does not work in IE.
-			Refer: https://mzl.la/2nMY277 and https://mzl.la/1ZCMa84
-	*/
-	this.constructor = jQuery.fn.getDOM;
-	this.constructor.prototype = jQuery.fn;
 	
-	//Using 'new' allows defining constructor for the returned jQuery object. Using $() will fire this constructor
-	return new this.constructor(selector);
-};
+	/* ------ Event Handlers ------ */
+	//Event handler for onload (onload vs DOMContentLoaded, see http://bit.ly/2nRJuXg), execute callbacks in readyCallbacks[]
+	document.addEventListener("DOMContentLoaded", function(evt) {
+		//Mark the isReady flag
+		jQuery.isReady = true;
+		
+		//Execute the callbacks
+		var len = jQuery.readyCallbacks.length;
+		for(var i=0; i<len; i++){
+			jQuery.readyCallbacks[i].call(document);		//Should second argument - $ be provided?
+		}
+	});
+	
+//Copy extend function and other required properties and functions for access from root (i.e. $.extend, $.each)
+$.extend = jQuery.fn.extend;
+$.extend(jQuery);
+$.extend(jQuery.fn);
 
 /*
 	Description:Create instance of jQuery. This instance will have access to all jQuery methods which can be found in the prototype of the constructor.
 				Call extend() method to copy all jQuery methods from constructor's prototype to root
 				Refer: http://bit.ly/2nF3OLu for jQuery.fn.extend implementation
 */
-var jQueryInstance = new $();
-jQueryInstance.extend(jQueryInstance.getDOM.prototype, $);
+//var jQueryInstance = new $();
+//jQueryInstance.extend(jQueryInstance.getDOM.prototype, $);
 
 /*******************************************/
 /**************** Angular ******************/
