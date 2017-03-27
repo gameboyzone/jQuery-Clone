@@ -2,11 +2,23 @@
 /***************** jQuery ******************/
 /*******************************************/
 
-//Module Design pattern allows copying properties and functions into $ and having an isolated module
-var $ = (function(selector){
+/*
+	Description: jQuery function definition on selector passed
+	param: 	selector (string)/DOM node (object)
+	return: jQuery anonymous function
+	Design pattern: Module pattern allows abstraction by copying properties and functions into $. 
+					This means the properties and functions are scoped to this object and does not pollute the global scope.
+					Note: 	Module pattern can also be implemented by enclosing only the return statement in the anonymous function.
+							This allows the freedom to modify the $ and jQuery.fn objects outside the scope of the module.
+	usage:	$					- Return the anonymous function
+			$()					- Returns object from getDom() function i.e. constructor
+			$(selector).each()	- each() accessible from constructor object
+			$.each()			- each() accessible from $ object
+*/
+var $ = function(selector){
 	/***	Define objects	***/
-	var jQuery = 	{ 	
-						"fn": {},			//fn object for all jQuery functions
+	var jQuery = 	{	
+						"fn": {},			//fn property will contain all jQuery functions
 						"author": "Harry Shah",
 						"version": "1.0.0"
 					};
@@ -18,15 +30,15 @@ var $ = (function(selector){
 		return: object
 		usage: 	$(selector),
 				$(selector).getDOM(),
-				$.getDom() ??
+				$.getDom()
 	*/
 	jQuery.fn.getDOM = function(selector) {
 		//Handle case when no selector passed
 		if(!selector){
-			//return 
+			//Do nothing
 		}
 		
-		this.collection = [];					//JS collection of DOM nodes
+		this.collection = [];		//JS collection of DOM nodes
 		this.selector = selector;
 		
 		//Selector is ID
@@ -48,15 +60,56 @@ var $ = (function(selector){
 		
 		this.length = this.collection.length;
 		
-		//return this;
+		//Why return this? Since every call to this constructor will be a new object, hence 'this' refers to the current object
+		return this;
 	};
 	
-	/*
-		$						- Return getDom function
-		$()						- Returns object from getDom() function
-		$(selector).each()		- each() accessible from constructor object
-		$.each()				- each() accessible from $ object
-	/*
+	/*	
+		Description: Converts property-based object to plain JavaScript array
+		param: 	object
+		return: array
+		usage: 	$.toArray({"A":"aaa", "B":"bbb", "C":"ccc"})
+	*/
+	jQuery.fn.toArray = function(object){
+		//Check invalid cases
+		if(!object || typeof object !=='object')
+			return null;
+		
+		var arr = [];
+		
+		for(var key in object){
+			arr.push(object[key]);
+		}
+		
+		return arr;
+	};
+	
+	/*	
+		Description: Copies properties from property-based object to target object
+		param: 	source (object)
+		param: 	target (object: not mandatory)
+		return: target (object)
+		usage: 	$("div").extend({"A":"aaa", "B":"bbb"})
+				$("h1").extend({"A":"aaa", "B":"bbb"}, obj)
+				$.extend({"A":"aaa", "B":"bbb"})
+				$.extend({"A":"aaa", "B":"bbb"}, obj)
+	*/
+	jQuery.fn.extend = function(source, target){
+		//Check invalid cases
+		if(source===undefined || ['object', 'function'].indexOf(typeof source)==-1)
+			return null;
+		
+		//If target not provided, consider default target as current instance
+		if(!target || ['object', 'function'].indexOf(typeof target)==-1)
+			target = this;
+		
+		for(var key in source){
+			if(source[key]!==undefined)		//Existing properties in target will be replaced
+				target[key] = source[key];
+		}
+		
+		return target;
+	};
 	
 	/*	
 		Description: Return collection (zero-indexed) as plain JavaScript array
@@ -117,19 +170,30 @@ var $ = (function(selector){
 		return (navigator && navigator.userAgent && navigator.userAgent.indexOf("MSIE") !== -1);
 	};
 	
-	//Design Pattern: Prototype
-	//When a property is sought and it isn't found in the object itself, then it is taken from the object's constructor's prototype.
-	//The prototype mechanism is used for inheritance. It also conserves memory.
-	//Another option was Module design pattern for public-private abstraction. Refer http://bit.ly/2nRGkik
-	//Example: return {'find':findMethod} where $.find('each') method will take the required function as an argument
-	//this.prototype.constructor.prototype = jQuery.fn;
-	jQuery.fn.getDOM.prototype = jQuery.fn;
+	/*
+		Design Pattern: Prototype
+		1.	When a property is sought and it isn't found in the object itself, then it is taken from the object's constructor's prototype.
+			This prototype mechanism will allow all jQuery instance objects (i.e. $()) access to jQuery.fn objects via inheritance. It also conserves memory.
+			Refer: http://bit.ly/2nEYsjs
+		2. 	Another option was Module design pattern for public-private abstraction. Refer http://bit.ly/2nRGkik
+			Example: return {'find':findMethod} where $.find('each') method will take the required function as an argument
+		3. 	There is no generic __lookupGetter for prototype. There is a Proxy class as a new feature in ES6 but does not work in IE.
+			Refer: https://mzl.la/2nMY277 and https://mzl.la/1ZCMa84
+	*/
+	this.constructor = jQuery.fn.getDOM;
+	this.constructor.prototype = jQuery.fn;
 	
-	//Call constructor to return jQuery object
-	return new jQuery.fn.getDOM(selector);
-});
+	//Using 'new' allows defining constructor for the returned jQuery object. Using $() will fire this constructor
+	return new this.constructor(selector);
+};
 
-
+/*
+	Description:Create instance of jQuery. This instance will have access to all jQuery methods which can be found in the prototype of the constructor.
+				Call extend() method to copy all jQuery methods from constructor's prototype to root
+				Refer: http://bit.ly/2nF3OLu for jQuery.fn.extend implementation
+*/
+var jQueryInstance = new $();
+jQueryInstance.extend(jQueryInstance.getDOM.prototype, $);
 
 /*******************************************/
 /**************** Angular ******************/
@@ -153,10 +217,10 @@ if (typeof angular === 'undefined') {
 	
 	/***	Define functions	***/
 	//jQuery mini functionality
-	angular.element = $.getDOM;
+	angular.element = $;
 
-    angular.mo2 = function (target, ev){
-        ev = ev || window.event;
+    angular.doSomething = function (target, ev){
+        var ev = ev || window.event;
 		
 		return {};
 	};
